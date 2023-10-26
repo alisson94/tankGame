@@ -1,19 +1,8 @@
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
-let delayInimigos = 0
+let frameAtual = 0
 let pause = false
 let pontos = 0
-
-const inimigo0 = new Inimigo({
-    posicao:{
-        x: 200,
-        y: 200,
-    },
-    velocidade: 1,
-    raio: 15,
-    vida: 2,
-    
-})
 
 const playerTank = {
     posicao: {
@@ -34,7 +23,7 @@ const playerTank = {
         a: 0,
         d: 0,
     },
-    inimigoMaisProximo: inimigo0,
+    inimigoMaisProximo: null,
     draw: ()=>{
         ctx.beginPath()
         ctx.fillStyle = '#ddd'
@@ -73,7 +62,6 @@ const playerTank = {
 
 const projeteis = []
 const inimigos = []
-inimigos.push(inimigo0)
 
 let frame = 0
 let raio = 15
@@ -101,7 +89,6 @@ function renderizar() {
     })
 
     let distanciaInimigoMaisProximo = 10000
-    let indexInimigoMaisProximo = null
 
     inimigos.forEach((inimigo, i)=>{
         inimigo.update()
@@ -115,22 +102,26 @@ function renderizar() {
         }
 
         projeteis.forEach((projetil, j)=>{
-            const distancia = distanciaCirculo(inimigo, projetil)
-            if(distancia < inimigo.raio+projetil.raio){
-                inimigo.vida--
-                projeteis.splice(j, 1)
-                if(inimigo.vida<=0){
-                    inimigo.estado = 'morte'
-                    inimigo.indice = i
-                    pontos++
+            if(!projetil.seInimigo){
+                const distancia = distanciaCirculo(inimigo, projetil)
+                if(distancia < inimigo.raio+projetil.raio){
+                    inimigo.vida--
+                    projeteis.splice(j, 1)
+                    if(inimigo.vida<=0){
+                        inimigo.estado = 'morte'
+                        inimigo.indice = i
+                        pontos++
+                    }
                 }
             }
         })
     })
 
-    if(delayInimigos%120 == 0){
+    if(frameAtual%180 == 0){
         let anguloSpawn = Math.random()*Math.PI*2
-        const inimigo = new Inimigo({
+        let anguloSpawn2 = Math.random()*Math.PI*2
+
+        const inimigo = new InimigoRed({
             posicao:{
                 x: 500*Math.cos(anguloSpawn),
                 y: 500*Math.sin(anguloSpawn),
@@ -138,11 +129,23 @@ function renderizar() {
             velocidade: 1,
             raio: 15,
             vida: 2,
-            indice: inimigos.length
+            estilo: 'red'
+        })
+        const inimigo2 = new InimigoBlue({
+            posicao:{
+                x: 500*Math.cos(anguloSpawn2),
+                y: 500*Math.sin(anguloSpawn2),
+            },
+            velocidade: 1,
+            raio: 15,
+            vida: 2,
+            estilo: 'blue'
         })
         inimigos.push(inimigo)
+        inimigos.push(inimigo2)
+
     }
-    delayInimigos++
+    frameAtual++
 
 }
 
