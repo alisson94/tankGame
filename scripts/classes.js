@@ -133,20 +133,21 @@ class InimigoBlue extends Inimigo{
     update(){
         this.draw()
 
-        if(distanciaCirculo(this, playerTank)>400){
+        if(distanciaCirculo(this, playerTank)>300){
             if(!seColisao(
                     this.posicao.x + this.velocidade*Math.cos(this.angulo),
                     this.posicao.y + this.velocidade*Math.sin(this.angulo),
                     this
                 ))
-            {
+            {   
+
                 this.posicao.x += this.velocidade*Math.cos(this.angulo)
                 this.posicao.y += this.velocidade*Math.sin(this.angulo)
             }
 
         }else{
             if(frameAtual%120 == 0){
-                let velocidade = 5
+                let velocidade = 3
                 let projetil = new Projetil({
                     posicao:{
                         x: this.posicao.x,

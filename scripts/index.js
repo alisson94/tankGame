@@ -1,5 +1,6 @@
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
+let gameOver = false
 let frameAtual = 0
 let pause = false
 let pontos = 0
@@ -24,6 +25,8 @@ const playerTank = {
         d: 0,
     },
     inimigoMaisProximo: null,
+    vida: 10,
+    tempoTiro: 60,
     draw: ()=>{
         ctx.beginPath()
         ctx.fillStyle = '#ddd'
@@ -67,13 +70,7 @@ let frame = 0
 let raio = 15
 
 function renderizar() {
-    if (!pause){window.requestAnimationFrame(renderizar)} 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    //GUI
-    ctx.font = '30px Pixelify Sans'
-    ctx.fillStyle = 'white'
-    ctx.fillText('Pontos: ' + pontos, 10, 50)
 
     //////TANK//////
     playerTank.draw()
@@ -113,6 +110,15 @@ function renderizar() {
                         pontos++
                     }
                 }
+            }else{
+                const distancia = distanciaCirculo(playerTank, projetil)
+                if(distancia < playerTank.raio+projetil.raio){
+                    playerTank.vida--
+                    projeteis.splice(j, 1)
+                    if(playerTank.vida<=0){
+                        gameOver = true
+                    }
+                }
             }
         })
     })
@@ -123,33 +129,85 @@ function renderizar() {
 
         const inimigo = new InimigoRed({
             posicao:{
-                x: 500*Math.cos(anguloSpawn),
-                y: 500*Math.sin(anguloSpawn),
+                x: playerTank.posicao.x +500*Math.cos(anguloSpawn),
+                y: playerTank.posicao.y + 500*Math.sin(anguloSpawn),
             },
             velocidade: 1,
             raio: 15,
             vida: 2,
             estilo: 'red'
         })
+        
         const inimigo2 = new InimigoBlue({
             posicao:{
-                x: 500*Math.cos(anguloSpawn2),
-                y: 500*Math.sin(anguloSpawn2),
+                x: playerTank.posicao.x + 500*Math.cos(anguloSpawn2),
+                y: playerTank.posicao.y + 500*Math.sin(anguloSpawn2),
             },
             velocidade: 1,
             raio: 15,
-            vida: 2,
+            vida: 1,
             estilo: 'blue'
         })
         inimigos.push(inimigo)
         inimigos.push(inimigo2)
 
     }
-    frameAtual++
 
+    //GUI
+    ctx.font = '30px Pixelify Sans'
+    ctx.textAlign = 'left'
+    ctx.fillStyle = 'white'
+    ctx.fillText('Pontos: ' + pontos, 10, 50)
+    ctx.fillText('Vida: ' + playerTank.vida, 10, 80)
+    
+    if(gameOver){
+        ctx.font = '100px Pixelify Sans'
+        ctx.textAlign='center'
+        ctx.fillText('Game over', canvas.width/2, 200)
+        ctx.font = '50px Pixelify Sans'
+        ctx.fillText('Recarregue a página para reiniciar', canvas.width/2, 300)
+    }else if(pause){
+        ctx.font = '60px Pixelify Sans'
+        ctx.textAlign='center'
+        ctx.fillText('Jogo pausado', canvas.width/2, 100)
+        ctx.fillText('Aperte P para retomar', canvas.width/2, 180)
+    }else{
+        window.requestAnimationFrame(renderizar)
+
+    }
+
+    if(frameAtual%playerTank.tempoTiro==0){
+        let velocidade = 35
+        let projetil = new Projetil({
+            posicao:{
+                x: playerTank.posicao.x + playerTank.canhao.x*Math.cos(playerTank.canhao.angulo),
+                y: playerTank.posicao.y + playerTank.canhao.x*Math.sin(playerTank.canhao.angulo)
+            },
+            velocidade:{
+                x: velocidade*Math.cos(playerTank.canhao.angulo),
+                y: velocidade*Math.sin(playerTank.canhao.angulo)
+            },
+            seInimigo: false
+        })
+        projeteis.push(projetil)
+        let shot = new Audio('./assets/sounds/pew-shot.wav');
+        
+        if(pontos>50){
+            playerTank.tempoTiro = 15
+        }
+        //shot.play()
+    }
+
+    frameAtual++
 }
 
 function distanciaCirculo(circulo1, circulo2) {
     return Math.sqrt(Math.pow(circulo1.posicao.x - circulo2.posicao.x,2)+ Math.pow(circulo1.posicao.y - circulo2.posicao.y,2))
 }
 
+function escreverNaTela(texto, x, y, cor, tamanhoFonte, alinhamento) {
+    ctx.font = tamanhoFonte + ' Pixelify Sans'  
+    ctx.textAlign= alinhamento
+    ctx.fillStyle = cor
+    ctx.fillText(texto, x, y)
+}

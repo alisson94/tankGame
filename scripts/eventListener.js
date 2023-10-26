@@ -2,23 +2,6 @@
 //     playerTank.canhao.angulo = Math.atan2(e.offsetY - playerTank.posicao.y, e.offsetX - playerTank.posicao.x)
 // })
 
-setInterval(() => {
-    let velocidade = 25
-    let projetil = new Projetil({
-        posicao:{
-            x: playerTank.posicao.x + playerTank.canhao.x*Math.cos(playerTank.canhao.angulo),
-            y: playerTank.posicao.y + playerTank.canhao.x*Math.sin(playerTank.canhao.angulo)
-        },
-        velocidade:{
-            x: velocidade*Math.cos(playerTank.canhao.angulo),
-            y: velocidade*Math.sin(playerTank.canhao.angulo)
-        },
-        seInimigo: false
-    })
-    projeteis.push(projetil)
-    let shot = new Audio('./assets/sounds/pew-shot.wav');
-    //shot.play()
-}, 300);
 
 // canvas.addEventListener('click', (e)=>{
 //     let velocidade = 10
