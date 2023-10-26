@@ -1,114 +1,141 @@
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
+let delayInimigos = 0
+let pause = false
 
-const tank1 = {
-    x: 200,
-    y: 200,
+const inimigo0 = new Inimigo({
+    posicao:{
+        x: 200,
+        y: 200,
+    },
+    velocidade: 1,
+    raio: 15,
+    vida: 2,
+    
+})
+
+const playerTank = {
+    posicao: {
+        x: 200,
+        y: 200
+    }, 
     velocidadePadrao: 5,
-    velocidadeX: 0,
-    velocidadeY: 0,
     raio: 20,
+    angulo: 0,
     canhao:{
         x: 35,
         y: 14,
+        angulo: 0
     },
-    anguloCanhao: 0,
     keys: {
         w: 0,
         s: 0,
         a: 0,
         d: 0,
+    },
+    inimigoMaisProximo: inimigo0,
+    draw: ()=>{
+        ctx.beginPath()
+        ctx.fillStyle = '#ddd'
+        ctx.arc(playerTank.posicao.x, playerTank.posicao.y, playerTank.raio, 0, Math.PI*2)
+        ctx.save()
+        ctx.translate(playerTank.posicao.x, playerTank.posicao.y)
+        ctx.rotate(playerTank.canhao.angulo)
+        ctx.rect(0, 0 - playerTank.canhao.y/2, playerTank.canhao.x, playerTank.canhao.y)
+        ctx.restore()
+        ctx.fill()
+        ctx.closePath()
+    },
+    update: ()=>{
+        if(playerTank.inimigoMaisProximo){
+            playerTank.canhao.angulo = Math.atan2(
+                playerTank.inimigoMaisProximo.posicao.y - playerTank.posicao.y,
+                playerTank.inimigoMaisProximo.posicao.x - playerTank.posicao.x) 
+        }
+
+        let versorVelocidade = {
+            x:playerTank.keys.d + playerTank.keys.a,
+            y: playerTank.keys.w + playerTank.keys.s
+        }
+    
+        if(versorVelocidade.x != 0 || versorVelocidade.y != 0){
+            playerTank.posicao.x += playerTank.velocidadePadrao* Math.cos(playerTank.angulo)
+            playerTank.posicao.y += playerTank.velocidadePadrao*Math.sin(playerTank.angulo)
+
+            playerTank.angulo = Math.atan2(versorVelocidade.y, versorVelocidade.x)
+        }else{
+            playerTank.posicao.x += 0
+            playerTank.posicao.y += 0
+        }
     }
 }
 
 const projeteis = []
-
+const inimigos = []
+inimigos.push(inimigo0)
 
 function renderizar() {
-    window.requestAnimationFrame(renderizar)
+    if (!pause){window.requestAnimationFrame(renderizar)} 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    tank1.x += tank1.velocidadeX
-    tank1.y += tank1.velocidadeY
-
-    tank1.velocidadeX = (tank1.keys.d + tank1.keys.a) * tank1.velocidadePadrao
-    tank1.velocidadeY = (tank1.keys.w + tank1.keys.s) * tank1.velocidadePadrao
-
-    ctx.beginPath()//desenha tank
-    ctx.fillStyle = '#ddd'
-    ctx.arc(tank1.x, tank1.y, tank1.raio, 0, Math.PI*2)
-    ctx.save()
-        ctx.translate(tank1.x, tank1.y)
-        ctx.rotate(tank1.anguloCanhao)
-        ctx.rect(0, 0 - tank1.canhao.y/2, tank1.canhao.x, tank1.canhao.y)
-    ctx.restore()
-    ctx.fill()
-    ctx.closePath()
-
-    projeteis.forEach(projetil=>{
-        projetil.x += projetil.velocidade.x
-        projetil.y += projetil.velocidade.y
-
-        ctx.beginPath()//desenha prejetil
-        ctx.arc(projetil.x, projetil.y, projetil.raio, 0, Math.PI*2)
-        ctx.fill()
-        ctx.closePath()
+    //////TANK//////
+    playerTank.draw()
+    playerTank.update()
+    //////FIM TANK//////
+    
+    projeteis.forEach((projetil, i)=>{
+        if(projetil.posicao.x > canvas.width || projetil.posicao.x < 0 || projetil.posicao.y > canvas.height || projetil.posicao.y < 0){
+            projeteis.splice(i, 1)
+        }else{
+            projetil.update()
+        }
     })
+
+    let distanciaInimigoMaisProximo = 10000
+    let indexInimigoMaisProximo = null
+
+    inimigos.forEach((inimigo, i)=>{
+        inimigo.update()
+
+        if(distanciaInimigoMaisProximo != 0){
+            if(distanciaCirculo(inimigo, playerTank) < distanciaInimigoMaisProximo){
+                distanciaInimigoMaisProximo = distanciaCirculo(inimigo, playerTank)
+                playerTank.inimigoMaisProximo = inimigo
+                //indexInimigoMaisProximo = i
+            }
+        }
+
+        projeteis.forEach((projetil, j)=>{
+            const distancia = distanciaCirculo(inimigo, projetil)
+            if(distancia < inimigo.raio+projetil.raio){
+                inimigo.vida--
+                projeteis.splice(j, 1)
+                if(inimigo.vida<=0){
+                    inimigos.splice(i, 1)
+                }
+            }
+        })
+    })
+
+    if(delayInimigos%120 == 0){
+        let anguloSpawn = Math.random()*Math.PI*2
+        const inimigo = new Inimigo({
+            posicao:{
+                x: 500*Math.cos(anguloSpawn),
+                y: 500*Math.sin(anguloSpawn),
+            },
+            velocidade: 1,
+            raio: 15,
+            vida: 2,
+        })
+        inimigos.push(inimigo)
+    }
+    delayInimigos++
+
+
 }
 
-canvas.addEventListener('click', (e)=>{
-    let velocidade = 7
-    projeteis.push({
-        x: tank1.x + tank1.canhao.x*Math.cos(tank1.anguloCanhao),
-        y: tank1.y + tank1.canhao.x*Math.sin(tank1.anguloCanhao),
-        velocidade:{
-            x: velocidade*Math.cos(tank1.anguloCanhao),
-            y: velocidade*Math.sin(tank1.anguloCanhao)
-        },
-        raio: 7
-    })
-})
+function distanciaCirculo(circulo1, circulo2) {
+    return Math.sqrt(Math.pow(circulo1.posicao.x - circulo2.posicao.x,2)+ Math.pow(circulo1.posicao.y - circulo2.posicao.y,2))
+}
 
-canvas.addEventListener('mousemove', (e)=>{
-    tank1.anguloCanhao = Math.atan2(e.offsetY - tank1.y, e.offsetX - tank1.x)
-    console.log(tank1.anguloCanhao)
-})
-
-addEventListener('keydown', (e) => {
-
-    switch (e.key) {
-        case 'w':
-            tank1.keys.w =-1
-            break;
-        case 's':
-            tank1.keys.s =1
-            break;
-        case 'a':
-            tank1.keys.a =-1
-            break;
-        case 'd':
-            tank1.keys.d =1
-            break;
-        default:
-            break;
-    }
-})
-
-addEventListener('keyup', (e)=>{
-    switch (e.key) {
-        case 'w':
-            tank1.keys.w =0
-            break;
-        case 's':
-            tank1.keys.s =0
-            break;
-        case 'a':
-            tank1.keys.a =0
-            break;
-        case 'd':
-            tank1.keys.d =0
-            break;
-        default:
-            break;
-    }
-})
