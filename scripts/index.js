@@ -2,6 +2,7 @@ const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
 let delayInimigos = 0
 let pause = false
+let pontos = 0
 
 const inimigo0 = new Inimigo({
     posicao:{
@@ -74,9 +75,17 @@ const projeteis = []
 const inimigos = []
 inimigos.push(inimigo0)
 
+let frame = 0
+let raio = 15
+
 function renderizar() {
     if (!pause){window.requestAnimationFrame(renderizar)} 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    //GUI
+    ctx.font = '30px Pixelify Sans'
+    ctx.fillStyle = 'white'
+    ctx.fillText('Pontos: ' + pontos, 10, 50)
 
     //////TANK//////
     playerTank.draw()
@@ -111,7 +120,9 @@ function renderizar() {
                 inimigo.vida--
                 projeteis.splice(j, 1)
                 if(inimigo.vida<=0){
-                    inimigos.splice(i, 1)
+                    inimigo.estado = 'morte'
+                    inimigo.indice = i
+                    pontos++
                 }
             }
         })
@@ -127,11 +138,11 @@ function renderizar() {
             velocidade: 1,
             raio: 15,
             vida: 2,
+            indice: inimigos.length
         })
         inimigos.push(inimigo)
     }
     delayInimigos++
-
 
 }
 

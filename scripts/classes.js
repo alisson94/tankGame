@@ -27,14 +27,38 @@ class Inimigo{
         this.posicao = posicao,
         this.velocidade = velocidade,
         this.raio = raio
-        this.angulo = 0
         this.vida = vida
+        this.indice = 0
+        this.angulo = 0
+        this.estado = 'move'
+        this.raioMorte = 0
     }draw(){
-        ctx.beginPath()
-        ctx.fillStyle = 'red'
-        ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
-        ctx.fill()
-        ctx.closePath()
+        switch (this.estado) {
+            case 'move':
+                ctx.beginPath()
+                ctx.fillStyle = 'red'
+                ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
+                ctx.fill()
+                ctx.closePath()
+                break;
+
+            case 'morte':
+                ctx.beginPath()
+                ctx.fillStyle = 'red'
+                if(this.raioMorte < this.raio){
+                    this.raioMorte++
+                    this.raio+=0.5
+                }else{
+                    inimigos.splice(this.indice, 1)
+                }
+                ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
+                ctx.arc(this.posicao.x, this.posicao.y, this.raioMorte, 0, -Math.PI*2, true)
+                ctx.fill()
+                ctx.closePath()
+                break;
+            default:
+                break;
+        }
     }
     update(){
         this.draw()
