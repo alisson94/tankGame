@@ -66,20 +66,6 @@ class Inimigo{
                 break;
         }
     }
-    update(){
-        this.draw()
-
-        if(!seColisao(
-                this.posicao.x + this.velocidade*Math.cos(this.angulo),
-                this.posicao.y + this.velocidade*Math.sin(this.angulo),
-                this
-            ))
-        {
-            this.posicao.x += this.velocidade*Math.cos(this.angulo)
-            this.posicao.y += this.velocidade*Math.sin(this.angulo)
-        }
-        this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
-    }
 }
 
 class InimigoRed extends Inimigo{
@@ -163,7 +149,45 @@ class InimigoBlue extends Inimigo{
                 projeteis.push(projetil)
             }
         }
+
         this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
+    }
+}
+
+class ItemBoost{
+    constructor({posicao}){
+        this.posicao = posicao
+        this.estado = 'nao pegado'
+        this.tempoBoost = {
+            atual: 0,
+            max: 180
+        }
+    }
+    draw(){
+        ctx.beginPath()
+        ctx.fillStyle = 'green'
+        ctx.arc(this.posicao.x, this.posicao.y, 7, 0, Math.PI*2)
+        ctx.fill()
+        ctx.closePath()
+    }
+    update(){
+        if(this.estado == 'nao pegado'){
+            this.draw()
+            if(distanciaCirculo(this, playerTank)<playerTank.raio+5){
+                this.estado = 'pegado'
+            }
+        }else if(this.estado == 'pegado'){
+            if(this.tempoBoost.atual< this.tempoBoost.max){
+                playerTank.tempoTiro = 20
+                this.tempoBoost.atual++
+            }else{
+                playerTank.tempoTiro = 100
+                const indice = items.indexOf(this)
+                items.splice(indice, 1)
+            }
+            
+        }
+        
     }
 }
 

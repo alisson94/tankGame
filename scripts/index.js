@@ -4,6 +4,9 @@ let gameOver = false
 let frameAtual = 0
 let pause = false
 let pontos = 0
+let tempoSpawnInimigos = 250
+
+const shot = new Audio('./assets/sounds/pew-shot.wav');
 
 const playerTank = {
     posicao: {
@@ -26,7 +29,7 @@ const playerTank = {
     },
     inimigoMaisProximo: null,
     vida: 10,
-    tempoTiro: 60,
+    tempoTiro: 100,
     draw: ()=>{
         ctx.beginPath()
         ctx.fillStyle = '#ddd'
@@ -65,6 +68,7 @@ const playerTank = {
 
 const projeteis = []
 const inimigos = []
+const items = []
 
 let frame = 0
 let raio = 15
@@ -77,8 +81,12 @@ function renderizar() {
     playerTank.update()
     //////FIM TANK//////
     
+    items.forEach((item, i)=>{
+        item.update()
+    })
+
     projeteis.forEach((projetil, i)=>{
-        if(projetil.posicao.x > canvas.width || projetil.posicao.x < 0 || projetil.posicao.y > canvas.height || projetil.posicao.y < 0){
+        if(!estaNaTela(projetil)){
             projeteis.splice(i, 1)
         }else{
             projetil.update()
@@ -90,11 +98,13 @@ function renderizar() {
     inimigos.forEach((inimigo, i)=>{
         inimigo.update()
 
-        if(distanciaInimigoMaisProximo != 0){
-            if(distanciaCirculo(inimigo, playerTank) < distanciaInimigoMaisProximo){
-                distanciaInimigoMaisProximo = distanciaCirculo(inimigo, playerTank)
-                playerTank.inimigoMaisProximo = inimigo
-                //indexInimigoMaisProximo = i
+        if(estaNaTela(inimigo)){
+            if(distanciaInimigoMaisProximo != 0){
+                if(distanciaCirculo(inimigo, playerTank) < distanciaInimigoMaisProximo){
+                    distanciaInimigoMaisProximo = distanciaCirculo(inimigo, playerTank)
+                    playerTank.inimigoMaisProximo = inimigo
+                    //indexInimigoMaisProximo = i
+                }
             }
         }
 
@@ -123,7 +133,7 @@ function renderizar() {
         })
     })
 
-    if(frameAtual%180 == 0){
+    if(frameAtual%tempoSpawnInimigos == 0){
         let anguloSpawn = Math.random()*Math.PI*2
         let anguloSpawn2 = Math.random()*Math.PI*2
 
@@ -150,8 +160,46 @@ function renderizar() {
         })
         inimigos.push(inimigo)
         inimigos.push(inimigo2)
-
     }
+    
+    if(frameAtual%playerTank.tempoTiro==0){
+        const velocidade = 35
+        const projetil = new Projetil({
+            posicao:{
+                x: playerTank.posicao.x + playerTank.canhao.x*Math.cos(playerTank.canhao.angulo),
+                y: playerTank.posicao.y + playerTank.canhao.x*Math.sin(playerTank.canhao.angulo)
+            },
+            velocidade:{
+                x: velocidade*Math.cos(playerTank.canhao.angulo),
+                y: velocidade*Math.sin(playerTank.canhao.angulo)
+            },
+            estilo: 'white',
+            seInimigo: false
+        })
+        projeteis.push(projetil)
+        
+        if(pontos>50){
+            playerTank.tempoTiro = 50
+            tempoSpawnInimigos = 150
+        }
+        //shot.play()
+    }
+    
+    if(frameAtual%300==0){
+        const prob = Math.random()
+        if(prob>0.8){
+            let anguloSpawn = Math.random()*Math.PI*2
+            const item = new ItemBoost({
+                posicao:{
+                    x: playerTank.posicao.x + 200*Math.cos(anguloSpawn),
+                    y: playerTank.posicao.y + 200*Math.sin(anguloSpawn)
+                }
+            })
+            items.push(item)
+        }
+    }
+
+    console.log(items.length)
 
     //GUI
     ctx.font = '30px Pixelify Sans'
@@ -175,29 +223,6 @@ function renderizar() {
         window.requestAnimationFrame(renderizar)
 
     }
-
-    if(frameAtual%playerTank.tempoTiro==0){
-        let velocidade = 35
-        let projetil = new Projetil({
-            posicao:{
-                x: playerTank.posicao.x + playerTank.canhao.x*Math.cos(playerTank.canhao.angulo),
-                y: playerTank.posicao.y + playerTank.canhao.x*Math.sin(playerTank.canhao.angulo)
-            },
-            velocidade:{
-                x: velocidade*Math.cos(playerTank.canhao.angulo),
-                y: velocidade*Math.sin(playerTank.canhao.angulo)
-            },
-            seInimigo: false
-        })
-        projeteis.push(projetil)
-        let shot = new Audio('./assets/sounds/pew-shot.wav');
-        
-        if(pontos>50){
-            playerTank.tempoTiro = 15
-        }
-        //shot.play()
-    }
-
     frameAtual++
 }
 
@@ -205,9 +230,6 @@ function distanciaCirculo(circulo1, circulo2) {
     return Math.sqrt(Math.pow(circulo1.posicao.x - circulo2.posicao.x,2)+ Math.pow(circulo1.posicao.y - circulo2.posicao.y,2))
 }
 
-function escreverNaTela(texto, x, y, cor, tamanhoFonte, alinhamento) {
-    ctx.font = tamanhoFonte + ' Pixelify Sans'  
-    ctx.textAlign= alinhamento
-    ctx.fillStyle = cor
-    ctx.fillText(texto, x, y)
+function estaNaTela(objeto) {
+    return objeto.posicao.x < canvas.width && objeto.posicao.x > 0 && objeto.posicao.y < canvas.height && objeto.posicao.y > 0
 }
