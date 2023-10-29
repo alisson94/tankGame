@@ -8,6 +8,11 @@ let tempoSpawnInimigos = 250
 
 const shot = new Audio('./assets/sounds/pew-shot.wav');
 
+const projeteis = []
+const inimigos = []
+const items = []
+const particulasPlayer = []
+
 const playerTank = {
     posicao: {
         x: 200,
@@ -59,16 +64,23 @@ const playerTank = {
             playerTank.posicao.y += playerTank.velocidadePadrao*Math.sin(playerTank.angulo)
 
             playerTank.angulo = Math.atan2(versorVelocidade.y, versorVelocidade.x)
+            //PARTICULAS
+            // if(frameAtual%5==0){
+            //     const particula = new Particula({
+            //         posicao: {
+            //             x: playerTank.posicao.x,
+            //             y: playerTank.posicao.y
+            //         }
+            //     })
+            //     particulasPlayer.push(particula)
+            //     console.log(particulasPlayer.length)
+            // }
         }else{
             playerTank.posicao.x += 0
             playerTank.posicao.y += 0
         }
     }
 }
-
-const projeteis = []
-const inimigos = []
-const items = []
 
 let frame = 0
 let raio = 15
@@ -81,6 +93,10 @@ function renderizar() {
     playerTank.update()
     //////FIM TANK//////
     
+    particulasPlayer.forEach((particula, i)=>{
+        particula.update()
+    })
+
     items.forEach((item, i)=>{
         item.update()
     })
@@ -105,6 +121,12 @@ function renderizar() {
                     playerTank.inimigoMaisProximo = inimigo
                     //indexInimigoMaisProximo = i
                 }
+            }
+        }
+        //AJUSTAR
+        if(distanciaCirculo(inimigo, playerTank)< inimigo.raio + playerTank.raio){
+            if(frameAtual%30 == 0){
+                playerTank.vida--
             }
         }
 
@@ -197,9 +219,15 @@ function renderizar() {
             })
             items.push(item)
         }
+        let anguloSpawn = Math.random()*Math.PI*2
+        const item = new ItemExplosao({
+            posicao:{
+                x: playerTank.posicao.x + 200*Math.cos(anguloSpawn),
+                y: playerTank.posicao.y + 200*Math.sin(anguloSpawn)
+            }
+        })
+        items.push(item)
     }
-
-    console.log(items.length)
 
     //GUI
     ctx.font = '30px Pixelify Sans'

@@ -191,6 +191,71 @@ class ItemBoost{
     }
 }
 
+class ItemExplosao{
+    constructor({posicao}){
+        this.posicao = posicao
+        this.estado = 'nao pegado'
+        this.raioExplosao ={
+            atual: 0,
+            max: 300
+        }
+        this.raioNegatico =0
+    }
+    draw(){
+        ctx.beginPath()
+        ctx.fillStyle = '#bbbbbb'
+        ctx.arc(this.posicao.x, this.posicao.y, 7, 0, Math.PI*2)
+        ctx.fill()
+        ctx.closePath()
+    }
+    update(){
+        if(this.estado == 'nao pegado'){
+            this.draw()
+            if(distanciaCirculo(this, playerTank)<playerTank.raio+5){
+                this.estado = 'pegado'
+            }
+        }else if(this.estado == 'pegado'){
+            //if(this.raioNegatico<this.raioExplosao.max)
+            if(this.raioExplosao.atual<this.raioExplosao.max){
+                ctx.beginPath()
+                ctx.fillStyle = '#ffffff'
+                ctx.arc(this.posicao.x, this.posicao.y, this.raioExplosao.atual, 0, Math.PI*2)
+                ctx.fill()
+                ctx.closePath()
+                this.raioExplosao.atual+=5
+            }else{
+                const indice = items.indexOf(this)
+                items.splice(indice, 1)
+            }
+            
+        }
+        
+    }
+}
+
+class Particula{
+    constructor({posicao}){
+        this.posicao = posicao
+        this.raio = 15
+    }
+    draw(){
+        ctx.beginPath()
+        ctx.fillStyle = '#dddddd80'
+        ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
+        ctx.fill()
+        ctx.closePath()
+    }
+    update(){
+        this.draw()
+        if(this.raio>0.4){
+            this.raio-=0.4
+        }else{
+            const indice = particulasPlayer.indexOf(this)
+            particulasPlayer.splice(indice, 1)
+        }
+    }
+}
+
 class Player{
     constructor({posicao, velocidade, cor, canhao}){
         this.posicao = posicao
