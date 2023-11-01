@@ -130,6 +130,16 @@ function renderizar() {
             }
         }
 
+        items.forEach((item,j)=>{
+            if(item instanceof ItemExplosao){
+                if(item.estado == 'pegado'){
+                    if(distanciaCirculo(item, inimigo)<inimigo.raio+item.raioExplosao.atual){
+                        inimigos.splice(i, 1)
+                    }
+                }
+            }
+        })
+
         projeteis.forEach((projetil, j)=>{
             if(!projetil.seInimigo){
                 const distancia = distanciaCirculo(inimigo, projetil)
@@ -219,14 +229,17 @@ function renderizar() {
             })
             items.push(item)
         }
-        let anguloSpawn = Math.random()*Math.PI*2
-        const item = new ItemExplosao({
-            posicao:{
-                x: playerTank.posicao.x + 200*Math.cos(anguloSpawn),
-                y: playerTank.posicao.y + 200*Math.sin(anguloSpawn)
-            }
-        })
-        items.push(item)
+        if(prob>0.9){
+            let anguloSpawn = Math.random()*Math.PI*2
+            const item = new ItemExplosao({
+                posicao:{
+                    x: playerTank.posicao.x + 200*Math.cos(anguloSpawn),
+                    y: playerTank.posicao.y + 200*Math.sin(anguloSpawn)
+                }
+            })
+            items.push(item)
+
+        }
     }
 
     //GUI

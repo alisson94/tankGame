@@ -199,7 +199,7 @@ class ItemExplosao{
             atual: 0,
             max: 300
         }
-        this.raioNegatico =0
+        this.raioNegatico = 0
     }
     draw(){
         ctx.beginPath()
@@ -216,13 +216,17 @@ class ItemExplosao{
             }
         }else if(this.estado == 'pegado'){
             //if(this.raioNegatico<this.raioExplosao.max)
-            if(this.raioExplosao.atual<this.raioExplosao.max){
+            if(this.raioExplosao.atual>=this.raioNegatico){
                 ctx.beginPath()
                 ctx.fillStyle = '#ffffff'
                 ctx.arc(this.posicao.x, this.posicao.y, this.raioExplosao.atual, 0, Math.PI*2)
+                if(this.raioExplosao.atual>150){
+                    ctx.arc(this.posicao.x, this.posicao.y, this.raioNegatico, 0, Math.PI*2, true)
+                    this.raioNegatico+=13
+                }
                 ctx.fill()
                 ctx.closePath()
-                this.raioExplosao.atual+=5
+                this.raioExplosao.atual+=7
             }else{
                 const indice = items.indexOf(this)
                 items.splice(indice, 1)
