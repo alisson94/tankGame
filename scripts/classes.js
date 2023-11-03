@@ -154,6 +154,60 @@ class InimigoBlue extends Inimigo{
     }
 }
 
+class InimigoYellow extends Inimigo{
+    constructor({
+        posicao,
+        velocidade,
+        raio,
+        vida,
+        estilo
+    }){
+        super({
+            posicao,
+            velocidade,
+            raio,
+            vida,
+            estilo
+        })
+    }
+    update(){
+        this.draw()
+
+        if(distanciaCirculo(this, playerTank)>600){
+            if(!seColisao(
+                    this.posicao.x + this.velocidade*Math.cos(this.angulo),
+                    this.posicao.y + this.velocidade*Math.sin(this.angulo),
+                    this
+                ))
+            {   
+
+                this.posicao.x += this.velocidade*Math.cos(this.angulo)
+                this.posicao.y += this.velocidade*Math.sin(this.angulo)
+            }
+
+        }else{
+            if(frameAtual%120 == 0){
+                let velocidade = 5
+                let projetil = new Projetil({
+                    posicao:{
+                        x: this.posicao.x,
+                        y: this.posicao.y
+                    },
+                    velocidade:{
+                        x: velocidade*Math.cos(this.angulo),
+                        y: velocidade*Math.sin(this.angulo)
+                    },
+                    estilo: this.estilo,
+                    seInimigo: true
+                })
+                projeteis.push(projetil)
+            }
+        }
+
+        this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
+    }
+}
+
 class ItemBoost{
     constructor({posicao}){
         this.posicao = posicao

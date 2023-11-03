@@ -168,6 +168,7 @@ function renderizar() {
     if(frameAtual%tempoSpawnInimigos == 0){
         let anguloSpawn = Math.random()*Math.PI*2
         let anguloSpawn2 = Math.random()*Math.PI*2
+        let anguloSpawn3 = Math.random()*Math.PI*2
 
         const inimigo = new InimigoRed({
             posicao:{
@@ -176,7 +177,7 @@ function renderizar() {
             },
             velocidade: 1,
             raio: 15,
-            vida: 2,
+            vida: 1,
             estilo: 'red'
         })
         
@@ -190,8 +191,20 @@ function renderizar() {
             vida: 1,
             estilo: 'blue'
         })
+
+        const inimigo3 = new InimigoYellow({
+            posicao:{
+                x: playerTank.posicao.x + 500*Math.cos(anguloSpawn3),
+                y: playerTank.posicao.y + 500*Math.sin(anguloSpawn3),
+            },
+            velocidade: 1,
+            raio: 15,
+            vida: 1,
+            estilo: 'yellow'
+        })
         inimigos.push(inimigo)
         inimigos.push(inimigo2)
+        inimigos.push(inimigo3)
     }
     
     if(frameAtual%playerTank.tempoTiro==0){
