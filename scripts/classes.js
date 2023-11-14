@@ -115,6 +115,8 @@ class InimigoBlue extends Inimigo{
             vida,
             estilo
         })
+        this.atualFrameTiro = 0
+        this.frameTiro = 150
     }
     update(){
         this.draw()
@@ -132,7 +134,7 @@ class InimigoBlue extends Inimigo{
             }
 
         }else{
-            if(frameAtual%120 == 0){
+            if(this.atualFrameTiro == this.frameTiro){
                 let velocidade = 3
                 let projetil = new Projetil({
                     posicao:{
@@ -146,9 +148,13 @@ class InimigoBlue extends Inimigo{
                     estilo: 'blue',
                     seInimigo: true
                 })
+                this.atualFrameTiro = 0
                 projeteis.push(projetil)
             }
+            this.atualFrameTiro++
         }
+
+        
 
         this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
     }
@@ -169,6 +175,8 @@ class InimigoYellow extends Inimigo{
             vida,
             estilo
         })
+        this.atualFrameTiro = 0
+        this.frameTiro = 120
     }
     update(){
         this.draw()
@@ -186,7 +194,7 @@ class InimigoYellow extends Inimigo{
             }
 
         }else{
-            if(frameAtual%120 == 0){
+            if(this.atualFrameTiro == this.frameTiro){
                 let velocidade = 5
                 let projetil = new Projetil({
                     posicao:{
@@ -200,8 +208,10 @@ class InimigoYellow extends Inimigo{
                     estilo: this.estilo,
                     seInimigo: true
                 })
+                this.atualFrameTiro = 0
                 projeteis.push(projetil)
             }
+            this.atualFrameTiro++
         }
 
         this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
@@ -231,11 +241,11 @@ class ItemBoost{
                 this.estado = 'pegado'
             }
         }else if(this.estado == 'pegado'){
-            if(this.tempoBoost.atual< this.tempoBoost.max){
-                playerTank.tempoTiro = 20
+            if(this.tempoBoost.atual < this.tempoBoost.max){
+                playerTank.tempoTiro = 2
                 this.tempoBoost.atual++
             }else{
-                playerTank.tempoTiro = 100
+                playerTank.tempoTiro = 1
                 const indice = items.indexOf(this)
                 items.splice(indice, 1)
             }
@@ -274,13 +284,13 @@ class ItemExplosao{
                 ctx.beginPath()
                 ctx.fillStyle = '#ffffff'
                 ctx.arc(this.posicao.x, this.posicao.y, this.raioExplosao.atual, 0, Math.PI*2)
-                if(this.raioExplosao.atual>150){
+                if(this.raioExplosao.atual > 150){
                     ctx.arc(this.posicao.x, this.posicao.y, this.raioNegatico, 0, Math.PI*2, true)
-                    this.raioNegatico+=13
+                    this.raioNegatico+=11
                 }
                 ctx.fill()
                 ctx.closePath()
-                this.raioExplosao.atual+=7
+                this.raioExplosao.atual+=8
             }else{
                 const indice = items.indexOf(this)
                 items.splice(indice, 1)

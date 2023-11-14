@@ -32,6 +32,10 @@ const playerTank = {
         a: 0,
         d: 0,
     },
+    mira: {
+        x: 0,
+        y: 0
+    },
     inimigoMaisProximo: null,
     vida: 10,
     tempoTiro: 100,
@@ -48,11 +52,11 @@ const playerTank = {
         ctx.closePath()
     },
     update: ()=>{
-        if(playerTank.inimigoMaisProximo){
-            playerTank.canhao.angulo = Math.atan2(
-                playerTank.inimigoMaisProximo.posicao.y - playerTank.posicao.y,
-                playerTank.inimigoMaisProximo.posicao.x - playerTank.posicao.x) 
-        }
+        // if(playerTank.inimigoMaisProximo){
+        //     playerTank.canhao.angulo = Math.atan2(
+        //         playerTank.inimigoMaisProximo.posicao.y - playerTank.posicao.y,
+        //         playerTank.inimigoMaisProximo.posicao.x - playerTank.posicao.x) 
+        // }
 
         let versorVelocidade = {
             x:playerTank.keys.d + playerTank.keys.a,
@@ -64,21 +68,12 @@ const playerTank = {
             playerTank.posicao.y += playerTank.velocidadePadrao*Math.sin(playerTank.angulo)
 
             playerTank.angulo = Math.atan2(versorVelocidade.y, versorVelocidade.x)
-            //PARTICULAS
-            // if(frameAtual%5==0){
-            //     const particula = new Particula({
-            //         posicao: {
-            //             x: playerTank.posicao.x,
-            //             y: playerTank.posicao.y
-            //         }
-            //     })
-            //     particulasPlayer.push(particula)
-            //     console.log(particulasPlayer.length)
-            // }
         }else{
             playerTank.posicao.x += 0
             playerTank.posicao.y += 0
         }
+
+        playerTank.canhao.angulo = Math.atan2(playerTank.mira.y - playerTank.posicao.y, playerTank.mira.x - playerTank.posicao.x)
     }
 }
 
@@ -124,11 +119,11 @@ function renderizar() {
             }
         }
         //AJUSTAR
-        if(distanciaCirculo(inimigo, playerTank)< inimigo.raio + playerTank.raio){
-            if(frameAtual%30 == 0){
-                playerTank.vida--
-            }
-        }
+        // if(distanciaCirculo(inimigo, playerTank)< inimigo.raio + playerTank.raio){
+        //     if(frameAtual%30 == 0){
+        //         playerTank.vida--
+        //     }
+        // }
 
         items.forEach((item,j)=>{
             if(item instanceof ItemExplosao){
@@ -165,6 +160,58 @@ function renderizar() {
         })
     })
 
+    spawnItems()
+    spawnInimigos()
+    
+    if(frameAtual%playerTank.tempoTiro==0){
+        const velocidade = 35
+        const projetil = new Projetil({
+            posicao:{
+                x: playerTank.posicao.x + playerTank.canhao.x*Math.cos(playerTank.canhao.angulo),
+                y: playerTank.posicao.y + playerTank.canhao.x*Math.sin(playerTank.canhao.angulo)
+            },
+            velocidade:{
+                x: velocidade*Math.cos(playerTank.canhao.angulo),
+                y: velocidade*Math.sin(playerTank.canhao.angulo)
+            },
+            estilo: 'white',
+            seInimigo: false
+        })
+        projeteis.push(projetil)
+        
+        if(pontos>50){
+            playerTank.tempoTiro = 50
+            tempoSpawnInimigos = 150
+        }
+        //shot.play()
+    }
+
+    //GUI
+    ctx.font = '30px Pixelify Sans'
+    ctx.textAlign = 'left'
+    ctx.fillStyle = 'white'
+    ctx.fillText('Pontos: ' + pontos, 10, 50)
+    ctx.fillText('Vida: ' + playerTank.vida, 10, 80)
+    
+    if(gameOver){
+        ctx.font = '100px Pixelify Sans'
+        ctx.textAlign='center'
+        ctx.fillText('Game over', canvas.width/2, 200)
+        ctx.font = '50px Pixelify Sans'
+        ctx.fillText('Recarregue a página para reiniciar', canvas.width/2, 300)
+    }else if(pause){
+        ctx.font = '60px Pixelify Sans'
+        ctx.textAlign='center'
+        ctx.fillText('Jogo pausado', canvas.width/2, 100)
+        ctx.fillText('Aperte P para retomar', canvas.width/2, 180)
+    }else{
+        window.requestAnimationFrame(renderizar)
+
+    }
+    frameAtual++
+}
+
+function spawnInimigos() {
     if(frameAtual%tempoSpawnInimigos == 0){
         let anguloSpawn = Math.random()*Math.PI*2
         let anguloSpawn2 = Math.random()*Math.PI*2
@@ -206,30 +253,9 @@ function renderizar() {
         inimigos.push(inimigo2)
         inimigos.push(inimigo3)
     }
-    
-    if(frameAtual%playerTank.tempoTiro==0){
-        const velocidade = 35
-        const projetil = new Projetil({
-            posicao:{
-                x: playerTank.posicao.x + playerTank.canhao.x*Math.cos(playerTank.canhao.angulo),
-                y: playerTank.posicao.y + playerTank.canhao.x*Math.sin(playerTank.canhao.angulo)
-            },
-            velocidade:{
-                x: velocidade*Math.cos(playerTank.canhao.angulo),
-                y: velocidade*Math.sin(playerTank.canhao.angulo)
-            },
-            estilo: 'white',
-            seInimigo: false
-        })
-        projeteis.push(projetil)
-        
-        if(pontos>50){
-            playerTank.tempoTiro = 50
-            tempoSpawnInimigos = 150
-        }
-        //shot.play()
-    }
-    
+}
+
+function spawnItems() {
     if(frameAtual%300==0){
         const prob = Math.random()
         if(prob>0.8){
@@ -254,30 +280,6 @@ function renderizar() {
 
         }
     }
-
-    //GUI
-    ctx.font = '30px Pixelify Sans'
-    ctx.textAlign = 'left'
-    ctx.fillStyle = 'white'
-    ctx.fillText('Pontos: ' + pontos, 10, 50)
-    ctx.fillText('Vida: ' + playerTank.vida, 10, 80)
-    
-    if(gameOver){
-        ctx.font = '100px Pixelify Sans'
-        ctx.textAlign='center'
-        ctx.fillText('Game over', canvas.width/2, 200)
-        ctx.font = '50px Pixelify Sans'
-        ctx.fillText('Recarregue a página para reiniciar', canvas.width/2, 300)
-    }else if(pause){
-        ctx.font = '60px Pixelify Sans'
-        ctx.textAlign='center'
-        ctx.fillText('Jogo pausado', canvas.width/2, 100)
-        ctx.fillText('Aperte P para retomar', canvas.width/2, 180)
-    }else{
-        window.requestAnimationFrame(renderizar)
-
-    }
-    frameAtual++
 }
 
 function distanciaCirculo(circulo1, circulo2) {

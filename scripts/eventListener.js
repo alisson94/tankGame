@@ -1,6 +1,10 @@
-// canvas.addEventListener('mousemove', (e)=>{
-//     playerTank.canhao.angulo = Math.atan2(e.offsetY - playerTank.posicao.y, e.offsetX - playerTank.posicao.x)
-// })
+canvas.addEventListener('mousemove', (e)=>{
+    playerTank.mira = {
+        x: e.offsetX,
+        y: e.offsetY
+    }
+    //playerTank.canhao.angulo = Math.atan2(e.offsetY - playerTank.posicao.y, e.offsetX - playerTank.posicao.x)
+})
 
 
 // canvas.addEventListener('click', (e)=>{
