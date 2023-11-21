@@ -11,7 +11,7 @@ const shot = new Audio('./assets/sounds/pew-shot.wav');
 const projeteis = []
 const inimigos = []
 const items = []
-const particulasPlayer = []
+const lasers = []
 
 const playerTank = {
     posicao: {
@@ -80,16 +80,24 @@ const playerTank = {
 let frame = 0
 let raio = 15
 
-function renderizar() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+const boss = new Boss({
+    posicao:{
+        x: 600,
+        y: 0
+    }
+})
 
-    //////TANK//////
+function renderizar() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    boss.update()
+    
     playerTank.draw()
     playerTank.update()
-    //////FIM TANK//////
-    
-    particulasPlayer.forEach((particula, i)=>{
-        particula.update()
+
+    lasers.forEach(laser =>{
+        laser.update()
     })
 
     items.forEach((item, i)=>{

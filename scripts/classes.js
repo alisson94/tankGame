@@ -255,7 +255,7 @@ class InimigoYellow extends Inimigo{
             case 'dano':
                 this.tempoNocaute--
                 this.estilo = '#ddd'
-                if(this.vida<0){
+                if(this.vida<=0){
                     this.estado = 'morte'
                     pontos++
                 }
@@ -274,6 +274,150 @@ class InimigoYellow extends Inimigo{
                 break;
         }
 
+    }
+}
+
+class Boss{
+    constructor({posicao}){
+        this.posicao = posicao
+        this.estado = 'iniciando'
+        this.velocidade={
+            x: 0,
+            y: 0
+        }
+        this.coolDownAtaqueRadial = 500
+        this.coolDownAvisoLaser = 1000
+        this.coolDownAtaqueLaser = 200
+    }
+
+    draw(){
+        ctx.beginPath()
+        ctx.fillStyle = 'orange'
+        ctx.moveTo(this.posicao.x, this.posicao.y)
+        ctx.lineTo(this.posicao.x+50, this.posicao.y-50)
+        ctx.lineTo(this.posicao.x, this.posicao.y+50)
+        ctx.lineTo(this.posicao.x-50, this.posicao.y-50)
+        ctx.fill()
+        ctx.closePath()
+    }
+
+    update(){
+        this.draw()
+
+        this.posicao.x += this.velocidade.x
+        this.posicao.y += this.velocidade.y
+
+        switch (this.estado) {
+            case 'iniciando':
+                if(this.posicao.y != 100) {
+                    this.posicao.y += 1
+                }else{
+                    this.estado = 'padrao'
+                    this.velocidade.x = 1
+                }
+                break;
+                
+            case 'padrao':
+                if(this.posicao.x == 700){
+                    this.velocidade.x = -1
+                }
+                if(this.posicao.x == 500){
+                    this.velocidade.x = 1
+                }
+                
+                this.coolDownAtaqueRadial--
+                
+                // if(this.coolDownAtaqueRadial == 0){
+                //     this.coolDownAtaqueRadial = 500
+                //     for (let i = 0; i < 18; i++) {
+                //         const projetil = new Projetil({
+                //             posicao: {
+                //                 x: this.posicao.x,
+                //                 y: this.posicao.y
+                //             },
+                //             velocidade: {
+                //                 x: 2*Math.cos(2*Math.PI/18 * i),
+                //                 y: 2*Math.sin(2*Math.PI/18 * i),
+                //             },
+                //             estilo: 'orange',
+                //             seInimigo: true
+                //         });
+                //         console.log(projetil)
+                //         projeteis.push(projetil)
+                //     }
+                // }
+                if(this.coolDownAvisoLaser == 0){
+                    //this.coolDownAvisoLaser = 500
+                    this.velocidade = {x:0, y:0}
+                
+                    const laser = new Laser({
+                        posicao:{
+                            x: this.posicao.x,
+                            y: this.posicao.y
+                        },
+                        angulo: Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
+                    })
+                    lasers.push(laser)
+                    
+                    this.coolDownAvisoLaser = 1000
+                       
+                }else{
+                    this.coolDownAvisoLaser--
+                }
+
+                break
+            default:
+                break;
+        }
+    }
+}
+
+class Laser{
+    constructor({posicao, angulo}){
+        this.posicao = posicao
+        this.angulo = angulo
+        this.frameAviso = {
+            max: 200,
+            atual: 0
+        }
+        this.frameAtaque = {
+            max: 200,
+            atual: 0
+        }
+    }
+
+    update(){
+        if(this.frameAviso.atual != this.frameAviso.max){
+            if(this.frameAviso.atual%50 > 25){
+                ctx.beginPath()
+                ctx.fillStyle = 'orange'
+                ctx.save()
+                ctx.translate(this.posicao.x, this.posicao.y)
+                ctx.rotate(this.angulo)
+                ctx.fillRect(0, 25, 1000, 5)
+                ctx.fillRect(0, -25, 1000, 5)
+                ctx.restore()
+                ctx.closePath()
+
+            }else{
+                this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
+
+            }
+            this.frameAviso.atual++
+        }else{
+            ctx.beginPath()
+            ctx.fillStyle = 'orange'
+            ctx.save()
+            ctx.translate(this.posicao.x, this.posicao.y)
+            ctx.rotate(this.angulo)
+            ctx.fillRect(0, -25, 1000, 70)
+            ctx.restore()
+            ctx.closePath()
+            this.frameAtaque.atual++
+            if(this.frameAtaque.atual == this.frameAtaque.max){
+                lasers.splice(lasers.indexOf(this),1)
+            }
+        }
     }
 }
 
