@@ -2,6 +2,7 @@ class Projetil{
     constructor({posicao, velocidade, estilo, seInimigo}){
         this.posicao = posicao
         this.velocidade = velocidade
+        this.raioa = 10
         this.raio = 7
         this.estilo = estilo
         this.seInimigo = seInimigo
@@ -9,6 +10,7 @@ class Projetil{
     draw(){
         ctx.beginPath()
         ctx.fillStyle = this.estilo
+        //ctx.ellipse(this.posicao.x, this.posicao.y, this.raioa, this.raiob,0, 0, Math.PI*2)
         ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
         ctx.fill()
         ctx.closePath()
@@ -47,6 +49,20 @@ class Inimigo{
         ctx.fill()
         ctx.closePath()
     }
+    morte(){
+        inimigos.splice( inimigos.indexOf(this) ,1)
+        for (let i = 0; i < 10; i++) {
+            const experiencia = new Particula({
+                posicao: {
+                    x: this.posicao.x,
+                    y: this.posicao.y
+                },
+                velocidade: Math.random()*6,
+                angulo: Math.random()*2*Math.PI
+            });
+            particulaExperiencias.push(experiencia)
+        }
+    }
 }
 
 
@@ -84,11 +100,21 @@ class InimigoRed extends Inimigo{
                 this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
                 
                 break;
-                
+            
+            case 'contato':
+                this.posicao.x += this.velocidade*Math.cos(this.angulo)
+                this.posicao.y += this.velocidade*Math.sin(this.angulo)
+                if(distanciaCirculo(this, playerTank)>200){
+                    this.estado ='move'
+                }
+
+                break
+
+
             case 'dano':
                 this.tempoNocaute--
                 this.estilo = '#ddd'
-                if(this.vida<0){
+                if(this.vida<=0){
                     this.estado = 'morte'
                 }
                 if(this.tempoNocaute<1){
@@ -99,7 +125,7 @@ class InimigoRed extends Inimigo{
                 break
             
             case 'morte':
-                inimigos.splice( inimigos.indexOf(this) ,1)
+                this.morte()
                 break
 
             default:
@@ -171,7 +197,7 @@ class InimigoBlue extends Inimigo{
             case 'dano':
                 this.tempoNocaute--
                 this.estilo = '#ddd'
-                if(this.vida<0){
+                if(this.vida<=0){
                     this.estado = 'morte'
                 }
                 if(this.tempoNocaute<1){
@@ -182,7 +208,7 @@ class InimigoBlue extends Inimigo{
                 break
             
             case 'morte':
-                inimigos.splice( inimigos.indexOf(this) ,1)
+                this.morte()
                 break
 
             default:
@@ -257,7 +283,6 @@ class InimigoYellow extends Inimigo{
                 this.estilo = '#ddd'
                 if(this.vida<=0){
                     this.estado = 'morte'
-                    pontos++
                 }
                 if(this.tempoNocaute<1){
                     this.estado = 'move'
@@ -267,7 +292,7 @@ class InimigoYellow extends Inimigo{
                 break
             
             case 'morte':
-                inimigos.splice( inimigos.indexOf(this) ,1)
+                this.morte()
                 break
 
             default:
@@ -286,8 +311,9 @@ class Boss{
             y: 0
         }
         this.coolDownAtaqueRadial = 500
+
         this.coolDownAvisoLaser = 1000
-        this.coolDownAtaqueLaser = 200
+        this.coolDownAtaqueLaser = 400
     }
 
     draw(){
@@ -327,39 +353,48 @@ class Boss{
                 
                 this.coolDownAtaqueRadial--
                 
-                // if(this.coolDownAtaqueRadial == 0){
-                //     this.coolDownAtaqueRadial = 500
-                //     for (let i = 0; i < 18; i++) {
-                //         const projetil = new Projetil({
-                //             posicao: {
-                //                 x: this.posicao.x,
-                //                 y: this.posicao.y
-                //             },
-                //             velocidade: {
-                //                 x: 2*Math.cos(2*Math.PI/18 * i),
-                //                 y: 2*Math.sin(2*Math.PI/18 * i),
-                //             },
-                //             estilo: 'orange',
-                //             seInimigo: true
-                //         });
-                //         console.log(projetil)
-                //         projeteis.push(projetil)
-                //     }
-                // }
+                if(this.coolDownAtaqueRadial == 0){
+                    this.coolDownAtaqueRadial = 500
+                    for (let i = 0; i < 18; i++) {
+                        const projetil = new Projetil({
+                            posicao: {
+                                x: this.posicao.x,
+                                y: this.posicao.y
+                            },
+                            velocidade: {
+                                x: 2*Math.cos(2*Math.PI/18 * i),
+                                y: 2*Math.sin(2*Math.PI/18 * i),
+                            },
+                            estilo: 'orange',
+                            seInimigo: true
+                        });
+                        projeteis.push(projetil)
+                    }
+                }
+
                 if(this.coolDownAvisoLaser == 0){
-                    //this.coolDownAvisoLaser = 500
                     this.velocidade = {x:0, y:0}
-                
-                    const laser = new Laser({
-                        posicao:{
-                            x: this.posicao.x,
-                            y: this.posicao.y
-                        },
-                        angulo: Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
-                    })
-                    lasers.push(laser)
                     
-                    this.coolDownAvisoLaser = 1000
+                    if(this.coolDownAtaqueLaser==400){
+                        const laser = new Laser({
+                            posicao:{
+                                x: this.posicao.x,
+                                y: this.posicao.y
+                            },
+                            angulo: Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x),
+                            criador: this,
+                        })
+                        lasers.push(laser)
+
+                    }
+
+                    this.coolDownAtaqueLaser--
+                    if(this.coolDownAtaqueLaser==0){
+                        this.coolDownAvisoLaser = 1000
+                        this.coolDownAtaqueLaser = 400
+                        this.velocidade = {x:1, y:0}
+
+                    }
                        
                 }else{
                     this.coolDownAvisoLaser--
@@ -410,12 +445,16 @@ class Laser{
             ctx.save()
             ctx.translate(this.posicao.x, this.posicao.y)
             ctx.rotate(this.angulo)
-            ctx.fillRect(0, -25, 1000, 70)
+            const proporcaoRaio = ( this.frameAtaque.atual<20 ? this.frameAtaque.atual/20 : 1)
+            ctx.arc(0,0, 25*proporcaoRaio,0, Math.PI)
+            ctx.rect(0,-25*proporcaoRaio, 1000, 50*proporcaoRaio)
+            ctx.fill()
             ctx.restore()
             ctx.closePath()
             this.frameAtaque.atual++
             if(this.frameAtaque.atual == this.frameAtaque.max){
                 lasers.splice(lasers.indexOf(this),1)
+
             }
         }
     }
@@ -505,25 +544,35 @@ class ItemExplosao{
 }
 
 class Particula{
-    constructor({posicao}){
+    constructor({posicao, velocidade, angulo}){
         this.posicao = posicao
-        this.raio = 15
+        this.velocidade = velocidade
+        this.angulo = angulo
+        this.raio = 5
     }
     draw(){
         ctx.beginPath()
-        ctx.fillStyle = '#dddddd80'
+        ctx.fillStyle = 'purple'
         ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
         ctx.fill()
         ctx.closePath()
     }
     update(){
         this.draw()
-        if(this.raio>0.4){
-            this.raio-=0.4
+        this.posicao.x += this.velocidade*Math.cos(this.angulo)
+        this.posicao.y += this.velocidade*Math.sin(this.angulo)
+
+        if(distanciaCirculo(this, playerTank) < this.raio + playerTank.raio){
+            experiencia++
+            particulaExperiencias.splice(particulaExperiencias.indexOf(this), 1)
+        }else if(distanciaCirculo(this, playerTank) < 200){
+            this.velocidade+=0.1
+            this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
         }else{
-            const indice = particulasPlayer.indexOf(this)
-            particulasPlayer.splice(indice, 1)
+            this.velocidade > 0 ? this.velocidade-=0.05 : this.velocidade = 0
+            
         }
+
     }
 }
 

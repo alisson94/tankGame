@@ -3,7 +3,7 @@ const ctx = canvas.getContext('2d')
 let gameOver = false
 let frameAtual = 0
 let pause = false
-let pontos = 0
+let experiencia = 0
 let tempoSpawnInimigos = 500
 
 const shot = new Audio('./assets/sounds/pew-shot.wav');
@@ -11,6 +11,7 @@ const shot = new Audio('./assets/sounds/pew-shot.wav');
 const projeteis = []
 const inimigos = []
 const items = []
+const particulaExperiencias = []
 const lasers = []
 
 const playerTank = {
@@ -80,21 +81,26 @@ const playerTank = {
 let frame = 0
 let raio = 15
 
-const boss = new Boss({
-    posicao:{
-        x: 600,
-        y: 0
-    }
-})
+const boss = null
+//boss = new Boss({
+//     posicao:{
+//         x: 600,
+//         y: 0
+//     }
+// })
 
 function renderizar() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    boss.update()
+    if(boss){boss.update()}
     
     playerTank.draw()
     playerTank.update()
+
+    particulaExperiencias.forEach(particula =>{
+        particula.update()
+    })
 
     lasers.forEach(laser =>{
         laser.update()
@@ -128,8 +134,11 @@ function renderizar() {
         }
         //AJUSTAR
         // if(distanciaCirculo(inimigo, playerTank)< inimigo.raio + playerTank.raio){
-        //     if(frameAtual%30 == 0){
-        //         playerTank.vida--
+        //     inimigo.angulo = -Math.atan2(playerTank.posicao.y - inimigo.posicao.y, playerTank.posicao.x - inimigo.posicao.x)
+        //     inimigo.estado = 'contato'
+        //     playerTank.vida--
+        //     if(playerTank.vida<=0){
+        //         gameOver = true
         //     }
         // }
 
@@ -184,8 +193,8 @@ function renderizar() {
             seInimigo: false
         })
         projeteis.push(projetil)
-        
-        if(pontos>50){
+
+        if(experiencia>50){
             playerTank.tempoTiro = 25
             //tempoSpawnInimigos = 150
         }
@@ -196,7 +205,7 @@ function renderizar() {
     ctx.font = '30px Pixelify Sans'
     ctx.textAlign = 'left'
     ctx.fillStyle = 'white'
-    ctx.fillText('Pontos: ' + pontos, 10, 50)
+    ctx.fillText('experiencia: ' + experiencia, 10, 50)
     ctx.fillText('Vida: ' + playerTank.vida, 10, 80)
     
     if(gameOver){
