@@ -4,7 +4,7 @@ let gameOver = false
 let frameAtual = 0
 let pause = false
 let experiencia = 0
-let tempoSpawnInimigos = 500
+let tempoSpawnInimigos = 300
 
 const shot = new Audio('./assets/sounds/pew-shot.wav');
 
@@ -81,17 +81,23 @@ const playerTank = {
 let frame = 0
 let raio = 15
 
-const boss = null
-//boss = new Boss({
-//     posicao:{
-//         x: 600,
-//         y: 0
-//     }
-// })
+let boss = null
+
 
 function renderizar() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    if(experiencia>500){
+        if(boss!=null){
+            boss = new Boss({
+                posicao:{
+                    x: 600,
+                    y: 0
+                }
+            })
+        }
+    }
 
     if(boss){boss.update()}
     
@@ -133,14 +139,14 @@ function renderizar() {
             }
         }
         //AJUSTAR
-        // if(distanciaCirculo(inimigo, playerTank)< inimigo.raio + playerTank.raio){
-        //     inimigo.angulo = -Math.atan2(playerTank.posicao.y - inimigo.posicao.y, playerTank.posicao.x - inimigo.posicao.x)
-        //     inimigo.estado = 'contato'
-        //     playerTank.vida--
-        //     if(playerTank.vida<=0){
-        //         gameOver = true
-        //     }
-        // }
+        if(distanciaCirculo(inimigo, playerTank)< inimigo.raio + playerTank.raio){
+            // inimigo.angulo = -Math.atan2(playerTank.posicao.y - inimigo.posicao.y, playerTank.posicao.x - inimigo.posicao.x)
+            // inimigo.estado = 'contato'
+            playerTank.vida--
+            if(playerTank.vida<=0){
+                gameOver = true
+            }
+        }
 
         items.forEach((item,j)=>{
             if(item instanceof ItemExplosao){
@@ -228,54 +234,57 @@ function renderizar() {
 
 function spawnInimigos() {
     if(frameAtual%tempoSpawnInimigos == 0){
-        let anguloSpawn = Math.random()*Math.PI*2
-        let tipoInimigo = Math.floor(Math.random()*2) 
+        for (let i = 0; i < 2; i++) {
+            let anguloSpawn = Math.random()*Math.PI*2
+            let tipoInimigo = Math.floor(Math.random()*3) 
 
-        let inimigo;
+            let inimigo;
 
-        switch (tipoInimigo) {
-            case 0:
-                inimigo = new InimigoRed({
-                    posicao:{
-                        x: playerTank.posicao.x +500*Math.cos(anguloSpawn),
-                        y: playerTank.posicao.y + 500*Math.sin(anguloSpawn),
-                    },
-                    velocidade: 1,
-                    raio: 15,
-                    vida: 3,
-                    estilo: 'red'
-                })
-                break;
-            
-            case 1:
-                inimigo = new InimigoBlue({
-                    posicao:{
-                        x: playerTank.posicao.x + 500*Math.cos(anguloSpawn),
-                        y: playerTank.posicao.y + 500*Math.sin(anguloSpawn),
-                    },
-                    velocidade: 1,
-                    raio: 15,
-                    vida: 2,
-                    estilo: 'blue'
-                })
-                break;
-            case 2:
-                inimigo = new InimigoYellow({
-                    posicao:{
-                        x: playerTank.posicao.x + 500*Math.cos(anguloSpawn),
-                        y: playerTank.posicao.y + 500*Math.sin(anguloSpawn),
-                    },
-                    velocidade: 1,
-                    raio: 15,
-                    vida: 2,
-                    estilo: 'yellow'
-                })
-                break;    
-            default:
-                break;
+            switch (tipoInimigo) {
+                case 0:
+                    inimigo = new InimigoRed({
+                        posicao:{
+                            x: playerTank.posicao.x +500*Math.cos(anguloSpawn),
+                            y: playerTank.posicao.y + 500*Math.sin(anguloSpawn),
+                        },
+                        velocidade: 1,
+                        raio: 15,
+                        vida: 3,
+                        estilo: 'red'
+                    })
+                    break;
+                
+                case 1:
+                    inimigo = new InimigoBlue({
+                        posicao:{
+                            x: playerTank.posicao.x + 500*Math.cos(anguloSpawn),
+                            y: playerTank.posicao.y + 500*Math.sin(anguloSpawn),
+                        },
+                        velocidade: 1,
+                        raio: 15,
+                        vida: 2,
+                        estilo: 'blue'
+                    })
+                    break;
+                case 2:
+                    inimigo = new InimigoYellow({
+                        posicao:{
+                            x: playerTank.posicao.x + 500*Math.cos(anguloSpawn),
+                            y: playerTank.posicao.y + 500*Math.sin(anguloSpawn),
+                        },
+                        velocidade: 1,
+                        raio: 15,
+                        vida: 2,
+                        estilo: 'yellow'
+                    })
+                    break;    
+                default:
+                    break;
+            }
+
+            inimigos.push(inimigo)
+                
         }
-
-        inimigos.push(inimigo)
     }
 }
 
