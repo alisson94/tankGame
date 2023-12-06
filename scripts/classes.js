@@ -31,10 +31,12 @@ class Inimigo{
         estilo,
     }){
         this.posicao = posicao,
-        this.velocidade = velocidade,
+        this.velocidadeModulo = velocidade,
+        this.velocidade = {x: 0, y: 0}
         this.raio = raio
         this.vida = vida
         this.estilo = estilo
+        this.cor = estilo
         this.indice = 0
         this.angulo = 0
         this.estado = 'move'
@@ -44,13 +46,47 @@ class Inimigo{
     draw(){
         //ctx.arc(this.posicao.x, this.posicao.y, this.raioMorte, 0, -Math.PI*2, true)
         ctx.beginPath()
-        ctx.fillStyle = this.estilo
+        ctx.fillStyle = this.cor
         ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
         ctx.fill()
         ctx.closePath()
     }
+
+    moverPara(x, y){
+        if(!seColisao(x, y, this)){
+            this.posicao.x = x
+            this.posicao.y = y
+        }
+
+        this.velocidade.x = this.velocidadeModulo*Math.cos(this.angulo)
+        this.velocidade.y = this.velocidadeModulo*Math.sin(this.angulo)
+    }
+
+    contato(){
+        this.velocidadeModulo -= 0.05
+        
+        if(this.velocidadeModulo <= 0){
+            this.estado ='move'
+            this.velocidadeModulo = 1
+        }
+        
+        this.moverPara(this.posicao.x + this.velocidade.x, this.posicao.y + this.velocidade.y)
+    }
+    dano(){
+        this.tempoNocaute--
+        this.cor = '#ddd'
+        if(this.vida<=0){
+            this.estado = 'morte'
+        }
+        if(this.tempoNocaute<1){
+            this.estado = 'move'
+            this.cor = this.estilo
+            this.tempoNocaute = 10
+        }
+    }
     morte(){
         inimigos.splice( inimigos.indexOf(this) ,1)
+        pontos += 5
         for (let i = 0; i < 10; i++) {
             const experiencia = new Particula({
                 posicao: {
@@ -87,41 +123,17 @@ class InimigoRed extends Inimigo{
 
         switch (this.estado) {
             case 'move':
-                if(!seColisao(
-                        this.posicao.x + this.velocidade*Math.cos(this.angulo),
-                        this.posicao.y + this.velocidade*Math.sin(this.angulo),
-                        this
-                    ))
-                {
-                    this.posicao.x += this.velocidade*Math.cos(this.angulo)
-                    this.posicao.y += this.velocidade*Math.sin(this.angulo)
-                }
-        
+                this.moverPara(this.posicao.x + this.velocidade.x, this.posicao.y + this.velocidade.y)
                 this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
-                
+
                 break;
             
             case 'contato':
-                this.posicao.x += this.velocidade*Math.cos(this.angulo)
-                this.posicao.y += this.velocidade*Math.sin(this.angulo)
-                if(distanciaCirculo(this, playerTank)>200){
-                    this.estado ='move'
-                }
-
+                this.contato()
                 break
 
-
             case 'dano':
-                this.tempoNocaute--
-                this.estilo = '#ddd'
-                if(this.vida<=0){
-                    this.estado = 'morte'
-                }
-                if(this.tempoNocaute<1){
-                    this.estado = 'move'
-                    this.estilo = 'red'
-                    this.tempoNocaute = 10
-                }
+                this.dano()
                 break
             
             case 'morte':
@@ -158,17 +170,8 @@ class InimigoBlue extends Inimigo{
 
         switch (this.estado) {
             case 'move':
-                if(distanciaCirculo(this, playerTank)>300){
-                    if(!seColisao(
-                            this.posicao.x + this.velocidade*Math.cos(this.angulo),
-                            this.posicao.y + this.velocidade*Math.sin(this.angulo),
-                            this
-                        ))
-                    {   
-            
-                        this.posicao.x += this.velocidade*Math.cos(this.angulo)
-                        this.posicao.y += this.velocidade*Math.sin(this.angulo)
-                    }
+                if(distanciaCirculo(this, playerTank)>300 || !estaNaTela(this)){
+                    this.moverPara(this.posicao.x + this.velocidade.x, this.posicao.y + this.velocidade.y)
             
                 }else{
                     if(this.atualFrameTiro == this.frameTiro){
@@ -193,18 +196,12 @@ class InimigoBlue extends Inimigo{
         
                 this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
                 break;
-                
+            case 'contato':
+                this.contato()
+
+                break 
             case 'dano':
-                this.tempoNocaute--
-                this.estilo = '#ddd'
-                if(this.vida<=0){
-                    this.estado = 'morte'
-                }
-                if(this.tempoNocaute<1){
-                    this.estado = 'move'
-                    this.estilo = 'blue'
-                    this.tempoNocaute = 10
-                }
+                this.dano()
                 break
             
             case 'morte':
@@ -243,16 +240,7 @@ class InimigoYellow extends Inimigo{
         switch (this.estado) {
             case 'move':
                 if(distanciaCirculo(this, playerTank)>600){
-                    if(!seColisao(
-                            this.posicao.x + this.velocidade*Math.cos(this.angulo),
-                            this.posicao.y + this.velocidade*Math.sin(this.angulo),
-                            this
-                        ))
-                    {   
-        
-                        this.posicao.x += this.velocidade*Math.cos(this.angulo)
-                        this.posicao.y += this.velocidade*Math.sin(this.angulo)
-                    }
+                    this.moverPara(this.posicao.x + this.velocidade.x, this.posicao.y + this.velocidade.y)
         
                 }else{
                     if(this.atualFrameTiro == this.frameTiro){
@@ -277,18 +265,13 @@ class InimigoYellow extends Inimigo{
         
                 this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
                 break;
-                
+            
+            case 'contato':
+                this.contato()
+                break
+
             case 'dano':
-                this.tempoNocaute--
-                this.estilo = '#ddd'
-                if(this.vida<=0){
-                    this.estado = 'morte'
-                }
-                if(this.tempoNocaute<1){
-                    this.estado = 'move'
-                    this.estilo = 'yelllow'
-                    this.tempoNocaute = 10
-                }
+                this.dano()
                 break
             
             case 'morte':
@@ -303,13 +286,18 @@ class InimigoYellow extends Inimigo{
 }
 
 class Boss{
-    constructor({posicao}){
-        this.posicao = posicao
+    constructor(){
+        this.posicao = {
+            x: canvas.width/2,
+            y: -50
+        }
         this.estado = 'iniciando'
         this.velocidade={
             x: 0,
             y: 0
-        }
+        },
+        this.vida = 30
+        this.raioHitbox = 40
         this.coolDownAtaqueRadial = 500
 
         this.coolDownAvisoLaser = 1000
@@ -446,7 +434,7 @@ class Laser{
             ctx.translate(this.posicao.x, this.posicao.y)
             ctx.rotate(this.angulo)
             const proporcaoRaio = ( this.frameAtaque.atual<20 ? this.frameAtaque.atual/20 : 1)
-            ctx.arc(0,0, 25*proporcaoRaio,0, Math.PI)
+            ctx.arc(0,0, 25*proporcaoRaio,0, Math.PI*2)
             ctx.rect(0,-25*proporcaoRaio, 1000, 50*proporcaoRaio)
             ctx.fill()
             ctx.restore()
@@ -463,6 +451,7 @@ class Laser{
 class ItemBoost{
     constructor({posicao}){
         this.posicao = posicao
+        this.velocidade = {x:0, y:0}
         this.estado = 'nao pegado'
         this.tempoBoost = {
             atual: 0,
@@ -484,10 +473,11 @@ class ItemBoost{
             }
         }else if(this.estado == 'pegado'){
             if(this.tempoBoost.atual < this.tempoBoost.max){
-                playerTank.tempoTiro = 2
+                this.tempoTiroAnterior = playerTank.tempoTiro
+                playerTank.tempoTiro = 10
                 this.tempoBoost.atual++
             }else{
-                playerTank.tempoTiro = 1
+                playerTank.tempoTiro = this.tempoTiroAnterior
                 const indice = items.indexOf(this)
                 items.splice(indice, 1)
             }
@@ -500,6 +490,7 @@ class ItemBoost{
 class ItemExplosao{
     constructor({posicao}){
         this.posicao = posicao
+        this.velocidade = {x:0, y:0}
         this.estado = 'nao pegado'
         this.raioExplosao ={
             atual: 0,
@@ -562,10 +553,13 @@ class Particula{
         this.posicao.x += this.velocidade*Math.cos(this.angulo)
         this.posicao.y += this.velocidade*Math.sin(this.angulo)
 
-        if(distanciaCirculo(this, playerTank) < this.raio + playerTank.raio){
+        const distancia = Math.hypot(this.posicao.x - playerTank.posicao.x,
+        this.posicao.y - playerTank.posicao.y)
+
+        if(distancia < this.raio + playerTank.raio){
             experiencia++
             particulaExperiencias.splice(particulaExperiencias.indexOf(this), 1)
-        }else if(distanciaCirculo(this, playerTank) < 200){
+        }else if(distancia < 200){
             this.velocidade+=0.1
             this.angulo = Math.atan2(playerTank.posicao.y - this.posicao.y, playerTank.posicao.x - this.posicao.x)
         }else{
@@ -579,15 +573,53 @@ class Particula{
 class Player{
     constructor({posicao, velocidade, cor, canhao}){
         this.posicao = posicao
-        this.velocidade = velocidade
-        this.raio = 7
+        this.velocidadePadrao = velocidade
+        this.velocidade = {x: 0, y: 0}
+        this.raio = 20
         this.cor = cor
+        this.angulo = 0
         this.canhao = canhao
+        this.keys = {
+            w: 0,
+            s: 0,
+            a: 0,
+            d: 0,
+        }
+        this.mira = {
+            x: 0,
+            y: 0
+        }
+        this.inimigoMaisProximo = null
+        this.vida = 100
+        this.tempoTiro = 50
 
+    }
+    atirar(){
+        const velocidade = 35
+        const projetil = new Projetil({
+            posicao:{
+                x: playerTank.posicao.x + playerTank.canhao.x*Math.cos(playerTank.canhao.angulo),
+                y: playerTank.posicao.y + playerTank.canhao.x*Math.sin(playerTank.canhao.angulo)
+            },
+            velocidade:{
+                x: velocidade*Math.cos(playerTank.canhao.angulo),
+                y: velocidade*Math.sin(playerTank.canhao.angulo)
+            },
+            estilo: 'white',
+            seInimigo: false
+        })
+        projeteis.push(projetil)
+
+        if(pontos>40){
+            playerTank.tempoTiro = 25
+            //tempoSpawnInimigos = 150
+        }        
+
+        //shot.play()
     }
     draw(){
         ctx.beginPath()//desenha tank
-        ctx.fillStyle = cor
+        ctx.fillStyle = this.cor
         ctx.arc(this.posicao.x, this.posicao.y, this.raio, 0, Math.PI*2)
         ctx.save()
             ctx.translate(this.posicao.x, this.posicao.y)
@@ -595,12 +627,35 @@ class Player{
             ctx.rect(0, 0 - this.canhao.y/2, this.canhao.x, this.canhao.y)
         ctx.restore()
         ctx.fill()
-    ctx.closePath()
+        ctx.closePath()
     }
     update(){
+        // if(playerTank.inimigoMaisProximo){
+        //     playerTank.canhao.angulo = Math.atan2(
+        //         playerTank.inimigoMaisProximo.posicao.y - playerTank.posicao.y,
+        //         playerTank.inimigoMaisProximo.posicao.x - playerTank.posicao.x) 
+        // }
         this.draw()
-        this.posicao.x += this.velocidade.x
-        this.posicao.y += this.velocidade.y
+
+        let versorVelocidade = {
+            x: playerTank.keys.d + playerTank.keys.a,
+            y: playerTank.keys.w + playerTank.keys.s
+        } 
+        
+        if(versorVelocidade.x != 0 || versorVelocidade.y != 0){
+            playerTank.velocidade.x = playerTank.velocidadePadrao* Math.cos(playerTank.angulo)
+            playerTank.velocidade.y = playerTank.velocidadePadrao*Math.sin(playerTank.angulo)
+
+            playerTank.angulo = Math.atan2(versorVelocidade.y, versorVelocidade.x)
+        }else{
+            playerTank.velocidade.x = 0
+            playerTank.velocidade.y = 0
+        }
+
+        playerTank.posicao.x += playerTank.velocidade.x
+        playerTank.posicao.y += playerTank.velocidade.y
+
+        playerTank.canhao.angulo = Math.atan2(playerTank.mira.y - playerTank.posicao.y, playerTank.mira.x - playerTank.posicao.x)
     }
 }
 
