@@ -39,7 +39,15 @@ function renderizar() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    if(boss){boss.update()}
+    if(boss){
+        boss.update()
+        if(Math.hypot(playerTank.posicao.x-boss.posicao.x, playerTank.posicao.y-boss.posicao.y) < boss.raioHitbox + playerTank.raio && playerTank.estado == "padrao"){
+            playerTank.dano(5)
+            playerTank.estado = 'nocaute'
+            playerTank.velocidadeModulo = 8
+        }
+
+    }
     
    
     playerTank.update()
@@ -63,7 +71,7 @@ function renderizar() {
             projetil.update()
         }
 
-        if(boss){
+        if(boss && !projetil.seInimigo){
             if(Math.hypot(projetil.posicao.x-boss.posicao.x, projetil.posicao.y-boss.posicao.y) < boss.raioHitbox){
                 boss.vida--
                 if(boss.vida<=0){
@@ -77,11 +85,8 @@ function renderizar() {
         if(projetil.seInimigo){
             const distancia = distanciaCirculo(playerTank, projetil)
             if(distancia < playerTank.raio+projetil.raio){
-                playerTank.vida--
+                playerTank.dano(1)
                 projeteis.splice(i, 1)
-                if(playerTank.vida<=0){
-                    gameOver = true
-                }
             }
         }
     })
@@ -89,7 +94,7 @@ function renderizar() {
     inimigos.forEach((inimigo, i)=>{
         inimigo.update()
 
-        //CODIGO PARA VER INIMIGO MAIS PERTO, NAO ESTA EM USO
+        //CODIGO PARA VER INIMIGO MAIS PERTO. OBS: NAO ESTA EM USO
         {
         // if(estaNaTela(inimigo)){
         //     if(distanciaInimigoMaisProximo != 0){
@@ -103,14 +108,11 @@ function renderizar() {
         }   
 
         //AJUSTAR
-        if(distanciaCirculo(inimigo, playerTank)< inimigo.raio + playerTank.raio){
+        if(distanciaCirculo(inimigo, playerTank) < inimigo.raio + playerTank.raio){
             inimigo.angulo = Math.PI + Math.atan2(playerTank.posicao.y - inimigo.posicao.y, playerTank.posicao.x - inimigo.posicao.x)
             inimigo.estado = 'contato'
             inimigo.velocidadeModulo = 5
-            playerTank.vida--
-            if(playerTank.vida<=0){
-                gameOver = true
-            }
+            playerTank.dano(1)
         }
 
         items.forEach((item,j)=>{
@@ -171,8 +173,8 @@ function renderizar() {
 }
 
 function spawnInimigos() {
-    if(pontos>10 && boss==null){
-        boss = new Boss()
+    if(pontos%50 == 0 && boss==null){
+        boss = new Boss({player: playerTank})
     }
 
     if(frameAtual%tempoSpawnInimigos == 0){
@@ -223,8 +225,6 @@ function spawnInimigos() {
                 default:
                     break;
             }
-
-
 
             inimigos.push(inimigo)
                 

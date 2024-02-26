@@ -286,7 +286,8 @@ class InimigoYellow extends Inimigo{
 }
 
 class Boss{
-    constructor(){
+    constructor({player}){
+        this.player = player
         this.posicao = {
             x: canvas.width/2,
             y: -50
@@ -332,11 +333,19 @@ class Boss{
                 break;
                 
             case 'padrao':
-                if(this.posicao.x == 700){
-                    this.velocidade.x = -1
-                }
-                if(this.posicao.x == 500){
-                    this.velocidade.x = 1
+                if(this.player.posicao.y > 250){
+                    if(this.posicao.x >= 700){
+                        this.velocidade.x = -1
+                    }
+                    if(this.posicao.x <= 500){
+                        this.velocidade.x = 1
+                    }
+                }else{
+                    if(this.posicao.x != this.player.posicao.x){
+                        this.velocidade.x = 3 * Math.sign(this.player.posicao.x - this.posicao.x)
+                    }else{
+                        this.velocidade.x = 0
+                    }
                 }
                 
                 this.coolDownAtaqueRadial--
@@ -573,7 +582,7 @@ class Particula{
 class Player{
     constructor({posicao, velocidade, cor, canhao}){
         this.posicao = posicao
-        this.velocidadePadrao = velocidade
+        this.velocidadeModulo = velocidade
         this.velocidade = {x: 0, y: 0}
         this.raio = 20
         this.cor = cor
@@ -592,6 +601,7 @@ class Player{
         this.inimigoMaisProximo = null
         this.vida = 100
         this.tempoTiro = 50
+        this.estado = 'padrao'
 
     }
     atirar(){
@@ -617,6 +627,12 @@ class Player{
 
         //shot.play()
     }
+    dano(dano){
+        this.vida -= dano
+        if(this.vida<=0){
+            gameOver = true
+        }
+    }
     draw(){
         ctx.beginPath()//desenha tank
         ctx.fillStyle = this.cor
@@ -637,25 +653,48 @@ class Player{
         // }
         this.draw()
 
-        let versorVelocidade = {
-            x: playerTank.keys.d + playerTank.keys.a,
-            y: playerTank.keys.w + playerTank.keys.s
-        } 
-        
-        if(versorVelocidade.x != 0 || versorVelocidade.y != 0){
-            playerTank.velocidade.x = playerTank.velocidadePadrao* Math.cos(playerTank.angulo)
-            playerTank.velocidade.y = playerTank.velocidadePadrao*Math.sin(playerTank.angulo)
-
-            playerTank.angulo = Math.atan2(versorVelocidade.y, versorVelocidade.x)
-        }else{
-            playerTank.velocidade.x = 0
-            playerTank.velocidade.y = 0
-        }
-
         playerTank.posicao.x += playerTank.velocidade.x
         playerTank.posicao.y += playerTank.velocidade.y
 
         playerTank.canhao.angulo = Math.atan2(playerTank.mira.y - playerTank.posicao.y, playerTank.mira.x - playerTank.posicao.x)
+                
+
+        switch (this.estado) {
+            case 'padrao':
+                let versorVelocidade = {
+                    x: playerTank.keys.d + playerTank.keys.a,
+                    y: playerTank.keys.w + playerTank.keys.s
+                } 
+                
+                if(versorVelocidade.x != 0 || versorVelocidade.y != 0){
+                    playerTank.velocidade.x = playerTank.velocidadeModulo* Math.cos(playerTank.angulo)
+                    playerTank.velocidade.y = playerTank.velocidadeModulo*Math.sin(playerTank.angulo)
+        
+                    playerTank.angulo = Math.atan2(versorVelocidade.y, versorVelocidade.x)
+                }else{
+                    playerTank.velocidade.x = 0
+                    playerTank.velocidade.y = 0
+                }
+        
+                
+                break;
+            
+            case 'nocaute':
+                this.velocidadeModulo -= 0.15
+                
+                playerTank.velocidade.x = playerTank.velocidadeModulo* Math.cos(Math.PI * 1/2)
+                playerTank.velocidade.y = playerTank.velocidadeModulo*Math.sin(Math.PI * 1/2)
+
+                if(this.velocidadeModulo <= 0){
+                    this.estado ='padrao'
+                    this.velocidadeModulo = 5
+                }
+
+                break
+            default:
+                break;
+        }
+
     }
 }
 
