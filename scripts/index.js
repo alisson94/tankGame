@@ -35,61 +35,19 @@ const playerTank = new Player({
     },
 })
 
+const camera = new Camera({
+    smoothing: 0.1
+})
+
 function renderizar() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    if(boss){
-        boss.update()
-        if(Math.hypot(playerTank.posicao.x-boss.posicao.x, playerTank.posicao.y-boss.posicao.y) < boss.raioHitbox + playerTank.raio && playerTank.estado == "padrao"){
-            playerTank.dano(5)
-            playerTank.estado = 'nocaute'
-            playerTank.velocidadeModulo = 8
+    camera.update({
+        newTarget: {
+            x: playerTank.posicao.x - canvas.width / 2,
+            y: playerTank.posicao.y - canvas.height / 2
         }
-
-    }
-    
-   
+    })
     playerTank.update()
-
-    particulaExperiencias.forEach(particula =>{
-        particula.update()
-    })
-
-    lasers.forEach(laser =>{
-        laser.update()
-    })
-
-    items.forEach((item, i)=>{
-        item.update()
-    })
-
-    projeteis.forEach((projetil, i)=>{
-        if(!estaNaTela(projetil, projetil.raio)){
-            projeteis.splice(i, 1)
-        }else{
-            projetil.update()
-        }
-
-        if(boss && !projetil.seInimigo){
-            if(Math.hypot(projetil.posicao.x-boss.posicao.x, projetil.posicao.y-boss.posicao.y) < boss.raioHitbox){
-                boss.vida--
-                if(boss.vida<=0){
-                    boss = null
-                }
-                projeteis.splice(i, 1)
-            }
-
-        }
-
-        if(projetil.seInimigo){
-            const distancia = distanciaCirculo(playerTank, projetil)
-            if(distancia < playerTank.raio+projetil.raio){
-                playerTank.dano(1)
-                projeteis.splice(i, 1)
-            }
-        }
-    })
 
     inimigos.forEach((inimigo, i)=>{
         inimigo.update()
@@ -139,6 +97,58 @@ function renderizar() {
         })
     })
 
+    particulaExperiencias.forEach(particula =>{
+        particula.update()
+    })
+
+    lasers.forEach(laser =>{
+        laser.update()
+    })
+
+    items.forEach((item, i)=>{
+        item.update()
+    })
+
+    projeteis.forEach((projetil, i)=>{
+        if(!estaNaTela(projetil, projetil.raio)){
+            projeteis.splice(i, 1)
+        }else{
+            projetil.update()
+        }
+
+        if(projetil.seInimigo){
+            const distancia = distanciaCirculo(playerTank, projetil)
+            if(distancia < playerTank.raio+projetil.raio){
+                playerTank.dano(1)
+                projeteis.splice(i, 1)
+            }
+        }
+    })
+
+    //==========
+    //DESENHO
+    //==========
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    ctx.save()
+    ctx.translate(-camera.posicao.x, -camera.posicao.y)
+
+    playerTank.draw()
+
+    inimigos.forEach((inimigo, i) => {inimigo.draw() })
+
+    particulaExperiencias.forEach(particula => { particula.draw()})
+
+    lasers.forEach(laser => {laser.draw()})
+
+    items.forEach((item, i) => { item.draw()})
+
+    projeteis.forEach((projetil, i)=> { projetil.draw() })
+
+    ctx.restore()
+
     spawnItems()
     spawnInimigos()
     
@@ -173,9 +183,6 @@ function renderizar() {
 }
 
 function spawnInimigos() {
-    if(pontos%50 == 0 && boss==null){
-        boss = new Boss({player: playerTank})
-    }
 
     if(frameAtual%tempoSpawnInimigos == 0){
         for (let i = 0; i < quantInimigos; i++) {
@@ -265,5 +272,7 @@ function distanciaCirculo(circulo1, circulo2) {
 }
 
 function estaNaTela(objeto, desvio = 0) {
-    return objeto.posicao.x < canvas.width + desvio && objeto.posicao.x > 0 - desvio && objeto.posicao.y < canvas.height + desvio && objeto.posicao.y > 0 - desvio
+    let posicaoX = objeto.posicao.x - camera.posicao.x
+    let posicaoY = objeto.posicao.y - camera.posicao.y
+    return posicaoX < canvas.width + desvio && posicaoX > 0 - desvio && posicaoY < canvas.height + desvio && posicaoY > 0 - desvio
 }

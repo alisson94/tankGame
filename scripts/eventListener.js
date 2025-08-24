@@ -1,8 +1,10 @@
 canvas.addEventListener('mousemove', (e)=>{
     playerTank.mira = {
-        x: e.offsetX,
-        y: e.offsetY
+        x: e.offsetX + camera.posicao.x,
+        y: e.offsetY + camera.posicao.y
     }
+
+    console.log(playerTank.mira)
     //playerTank.canhao.angulo = Math.atan2(e.offsetY - playerTank.posicao.y, e.offsetX - playerTank.posicao.x)
 })
 

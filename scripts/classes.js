@@ -16,7 +16,6 @@ class Projetil{
         ctx.closePath()
     }
     update(){
-        this.draw()
         this.posicao.x += this.velocidade.x
         this.posicao.y += this.velocidade.y
     }
@@ -119,7 +118,7 @@ class InimigoRed extends Inimigo{
         })
     }
     update(){
-        this.draw()
+        //this.draw()
 
         switch (this.estado) {
             case 'move':
@@ -166,7 +165,7 @@ class InimigoBlue extends Inimigo{
         this.frameTiro = 150
     }
     update(){
-        this.draw()
+        //this.draw()
 
         switch (this.estado) {
             case 'move':
@@ -235,7 +234,7 @@ class InimigoYellow extends Inimigo{
         this.frameTiro = 120
     }
     update(){
-        this.draw()
+        //this.draw()
 
         switch (this.estado) {
             case 'move':
@@ -317,7 +316,7 @@ class Boss{
     }
 
     update(){
-        this.draw()
+       // this.draw()
 
         this.posicao.x += this.velocidade.x
         this.posicao.y += this.velocidade.y
@@ -476,7 +475,7 @@ class ItemBoost{
     }
     update(){
         if(this.estado == 'nao pegado'){
-            this.draw()
+            //this.draw()
             if(distanciaCirculo(this, playerTank)<playerTank.raio+5){
                 this.estado = 'pegado'
             }
@@ -516,7 +515,7 @@ class ItemExplosao{
     }
     update(){
         if(this.estado == 'nao pegado'){
-            this.draw()
+            //this.draw()
             if(distanciaCirculo(this, playerTank)<playerTank.raio+5){
                 this.estado = 'pegado'
             }
@@ -558,7 +557,7 @@ class Particula{
         ctx.closePath()
     }
     update(){
-        this.draw()
+        //this.draw()
         this.posicao.x += this.velocidade*Math.cos(this.angulo)
         this.posicao.y += this.velocidade*Math.sin(this.angulo)
 
@@ -651,7 +650,7 @@ class Player{
         //         playerTank.inimigoMaisProximo.posicao.y - playerTank.posicao.y,
         //         playerTank.inimigoMaisProximo.posicao.x - playerTank.posicao.x) 
         // }
-        this.draw()
+        //this.draw()
 
         playerTank.posicao.x += playerTank.velocidade.x
         playerTank.posicao.y += playerTank.velocidade.y
@@ -711,4 +710,29 @@ function seColisao(x, y, ignore) {
         }
     });
     return retorno
+}
+
+class Camera{
+    constructor({smoothing}){
+        
+        this.smoothing = smoothing
+
+        // this.target = {
+        //     x: target.posicao.x - ctx.width / 2,
+        //     y: target.posicao.y - ctx.height / 2
+        // }
+
+        this.posicao = {
+            x: 0,
+            y: 0
+        }
+    }
+
+    update({ newTarget }){ 
+
+        this.posicao.x += (newTarget.x - this.posicao.x) * this.smoothing
+        this.posicao.y += (newTarget.y - this.posicao.y) * this.smoothing
+
+        //console.log(newTarget)
+    }
 }
